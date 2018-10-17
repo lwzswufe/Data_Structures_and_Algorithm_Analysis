@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "gcc",
+            "windows": {
+                "args": [
+                ]
+            },
+            "linux": {
+                "args": [
+                    "${fileDirname}/${fileBasenameNoExtension}.o"
+                ]
+            },
+            "osx": {
+                "args": [
+                    "${fileDirname}/${fileBasenameNoExtension}.o"
+                ]
+            },
+            "args": [
+                "-g",
+                "-Wall",
+                "-std=c++11",
+                "-lm",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.exe",
+                "-lwsock32",
+                "-lws2_32"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}

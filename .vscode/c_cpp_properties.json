@@ -1,0 +1,28 @@
+{
+    "configurations": [
+        {
+            "name": "MinGW",
+            "includePath": [
+                "${workspaceRoot}",
+                "${workspaceFolder}"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE"
+            ],
+            "compilerPath": "C:\\LLVM\\bin\\gcc.exe",
+            "intelliSenseMode": "clang-x64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "miDebuggerPath": "C:\\LLVM\\bin\\gdb.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}
