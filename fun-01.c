@@ -51,24 +51,32 @@ Position BinarySearch( List L, ElementType X );
 int main()
 {
     List L;
-    struct LNode node; 
-    L = &node;
     ElementType X;
     Position P;
 
-    int N;
-    scanf("%d", &N);
-    for (int i=0; i<N; i++)
-    {
-        scanf("%d", L->Data + i +1);
-    }
-    L->Last = N;
+    L = ReadInput();
     scanf("%d", &X);
     P = BinarySearch( L, X );
     printf("%d\n", P);
 
     return 0;
 }
+
+List ReadInput()
+{   
+    int N;
+    scanf("%d", &N);
+    List L;
+    L = (List)malloc(sizeof(struct LNode));         // 为线性表分配空间
+    L->Last = N;
+    L->Data[0] = -1;
+    for (int i=0; i<N; i++)
+    {
+        scanf("%d", L->Data + i +1);
+    }
+    return L;
+}
+
 
 Position sub_BinarySearch( List L, ElementType X, int st, int ed)
 {   
