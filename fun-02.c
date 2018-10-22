@@ -91,14 +91,17 @@ List Read() // 细节在此不表 //
 void Print( List L )  // 细节在此不表；空链表将输出NULL //
 {
     if (L == NULL || L->Next == NULL)
+    {
         printf("NULL\n");
+        return;
+    }
     L = L->Next;
     while(L->Next != NULL)
     {
         printf("%d ", L->Data);
         L = L->Next;
     }
-    printf("%d", L->Data);
+    printf("%d\n", L->Data);
 }
 
 List Merge( List L1, List L2 )
@@ -108,21 +111,26 @@ List Merge( List L1, List L2 )
     L->Data = 0;
     L->Next = NULL;
     first_L = L;
-    while(L1->Next!=NULL || L1->Next!=NULL)
-    {
-        if (L2->Next==NULL || (L1->Next!=NULL &&  L1->Data < L2->Data))
-        {
+    while(L1->Next!=NULL || L2->Next!=NULL)
+    {   
+        if (L2->Next==NULL || (L1->Next!=NULL &&  L1->Next->Data < L2->Next->Data))
+        {   
             L->Next = L1->Next;
             L1->Next = L1->Next->Next;
+            //Print(L1);
         }
         else
-        {
+        {   
             L->Next = L2->Next;
             L2->Next = L2->Next->Next;
+            //Print(L2);
         }
         L = L->Next;
         L->Next = NULL;
+        //Print(first_L);
+        //printf("%d %p\n", L->Data, L->Next);
     }
+    return first_L;
 }
 
 
