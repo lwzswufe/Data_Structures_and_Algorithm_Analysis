@@ -40,86 +40,138 @@ Sample Output:
 
 #include <stdio.h>
 #include <stdlib.h>
-#define MAXSIZE 1000
+#define MAXSIZE 100001
 struct LNode
 {   
     int No;
     int addr;
     struct LNode * next;
+    struct LNode * previous;
 };
 typedef struct LNode * PtrLNode;
-PtrLNode ReadInput(int, int);
-void Print(PtrLNode);
-int readnum();
+PtrLNode ReadInput(int, int, int*);
+PtrLNode Move(int, int, PtrLNode);
+void Print(PtrLNode, int);
+void PrintPrevious(PtrLNode, int, int);
+
 
 int main()
 {      
     PtrLNode firstNode;
-    int addr, N, K;
+    int addr, N, K, N2;
     scanf("%d %d %d", &addr, &N, &K);
-    printf("\n%d %d %d\n", addr, N, K);
-    firstNode = ReadInput(N, addr);
-    //Print(firstNode);
+    //printf("%d %d %d\n", addr, N, K);
+    firstNode = ReadInput(N, addr, &N2);
+    //firstNode = Move(N, K, firstNode);
+    //printf("over\n");
+    if(K==0 || K==1)
+        Print(firstNode, N2);
+    else
+        PrintPrevious(firstNode, N2, K);
+    scanf("%d %d %d", &addr, &N, &K);
     return 0;
 }
 
-PtrLNode ReadInput(int N, int firstAddr)
+PtrLNode ReadInput(int N, int firstAddr, int* ptr_N)
 {   
     PtrLNode L, firstNode=NULL, pastNode;
-    int addrArr[MAXSIZE], NoArr[N], nextAddrArr[N], addr, No, nextAddr, idx; 
+    int addrArr[MAXSIZE], NoArr[N], nextAddrArr[N], addr, No, nextAddr, idx, N2; 
     for(int i=0; i<MAXSIZE; i++)
         addrArr[i] = -1;
     for(int i=0; i<N; i++)
     {   
         scanf("%d %d %d", &addr, &No, &nextAddr);
-        printf("%d %d %d\n", addr, No, nextAddr);
-        addr = addr % 1000;
+        //addr = addr % 1000;
+        //nextAddr = nextAddr % 1000;
+        //printf("%d %d %d\n", addr, No, nextAddr);
         addrArr[addr] = i;
         NoArr[i] = No;
         nextAddrArr[i] = nextAddr;
     }
-    printf("over");
     idx = addrArr[firstAddr];
     nextAddr = nextAddrArr[idx];
     L = (PtrLNode)malloc(sizeof(struct LNode));
     L->No = NoArr[idx];
-    L->addr = 0;
+    L->addr = firstAddr;
     L->next = NULL;
+    L->previous = NULL;
+    //printf("%p\n", L);
+    //printf("%d %d %d\n", L->No, L->addr, nextAddr);
+    N2 = 1;
     pastNode = firstNode = L;
     while (nextAddr >= 0)
     {   
-        printf("%d: ", idx);
         addr = nextAddr;
         idx = addrArr[addr];
         L = (PtrLNode)malloc(sizeof(struct LNode));
         L->No = NoArr[idx];
         L->addr = addr;
         L->next = NULL;
+        L->previous = pastNode;
         pastNode->next = L;
         pastNode = L;
         nextAddr = nextAddrArr[idx];
+        N2++;
+        //printf("%d %d %d\n", L->No, L->addr, nextAddr);
     }
+    *ptr_N = N2;
+    //printf("N2: %d\n", N2);
+    //L->next = firstNode;
+    //firstNode->previous = L;
+    //printf("over\n");
+    //printf("%p\n", firstNode);
     return firstNode;
 }
 
-int readnum()
+
+void Print(PtrLNode pNode, int N)
 {   
-    int n=0, i=0;
-    while(n == 0 && i<1)
-    {
-        scanf("%d", &n);
-        i++;
+    for(int i=1; i<N; i++)
+    {   
+        printf("%05d %d %05d\n", pNode->addr, pNode->No, pNode->next->addr);
+        pNode = pNode->next;
     }
-    return n;
+    printf("%05d %d -1\n", pNode->addr, pNode->No);
 }
 
-void Print(PtrLNode pNode)
+void PrintPrevious(PtrLNode pNode, int N, int K)
 {   
-    while(pNode == NULL)
-    {   
-        if (pNode->next != NULL)
-            printf("%05d %d %05d\n", pNode->addr, pNode->No, pNode->next->addr);
-        else
-            printf("%05d %d -1\n", pNode->addr, pNode->No);
+    PtrLNode firstNode=pNode, tmpNode=NULL, tmpPastNode=NULL;
+    for(int i=1; i<=N; i++)
+    {
+        if (i % K == 1)                         // 记录本次反转的结束位置作为下次反转的开始
+        {   
+            tmpPastNode = tmpNode;
+            tmpNode = pNode;
+        }
+        if (i % K == 0)                         // 每K个元素反转
+        {   
+            if(i == K)
+                firstNode = pNode;
+            else
+                tmpPastNode->previous = pNode;
+        }
+        pNode = pNode->next;
     }
+    if (N % K != 0)
+    {
+        tmpPastNode->previous = tmpNode;
+        tmpNode->previous = NULL;
+    }
+    pNode = firstNode;
+    for(int i=1, flag=0; i<N; i++)
+    {   
+        if (pNode->previous != NULL && flag==0) // 逆序输出
+        {   
+            printf("%05d %d %05d\n", pNode->addr, pNode->No, pNode->previous->addr);
+            pNode = pNode->previous;
+        }
+        else                                    // 开始正向输出
+        {   
+            flag = 1;
+            printf("%05d %d %05d\n", pNode->addr, pNode->No, pNode->next->addr);
+            pNode = pNode->next;
+        }
+    }
+    printf("%05d %d -1\n", pNode->addr, pNode->No);
 }
