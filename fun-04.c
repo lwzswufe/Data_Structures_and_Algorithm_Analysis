@@ -46,15 +46,14 @@ Inorder: 1 2 4 6 8 9
 #include <stdlib.h>
 
 typedef int ElementType;
-typedef struct TNode *Position;
-typedef Position BinTree;
 struct TNode
 {
     ElementType Data;
-    BinTree Left;
-    BinTree Right;
+    struct TNode * Left;
+    struct TNode *  Right;
 };
-
+typedef struct TNode *Position;
+typedef Position BinTree;
 void PreorderTraversal( BinTree BT ); // 先序遍历，由裁判实现，细节不表 //
 void InorderTraversal( BinTree BT );  // 中序遍历，由裁判实现，细节不表 //
 
@@ -98,28 +97,34 @@ int main()
     for( i=0; i<N; i++ ) 
     {
         scanf("%d", &X);
+        printf("delete: %d\n", X);
         BST = Delete(BST, X);
+        printf("root: %d\n", BST->Data);
     }
     printf("Inorder:"); 
     InorderTraversal(BST); printf("\n");
-
+    scanf("%d", &X);
     return 0;
 }
 
 void PreorderTraversal( BinTree BT )
 {   // 先序遍历
+    if(BT == NULL)
+        return;
+    printf("%d ", BT->Data);
     if(BT->Left != NULL)
         PreorderTraversal(BT->Left);
-    printf("%d ", BT->Data);
     if(BT->Right != NULL)
         PreorderTraversal(BT->Right);
 }
 
 void InorderTraversal( BinTree BT )
 {   // 中序遍历
-    printf("%d ", BT->Data);
+    if(BT == NULL)
+        return;
     if(BT->Left != NULL)
         PreorderTraversal(BT->Left);
+    printf("%d ", BT->Data);
     if(BT->Right != NULL)
         PreorderTraversal(BT->Right);
 }
@@ -137,7 +142,12 @@ Position Create(ElementType X )
 BinTree Insert( BinTree BST, ElementType X )
 {
     Position root = BST, new_node;
-    while (X != BST->Data)
+    if (BST == NULL)
+    {
+        new_node = Create(X);
+        return new_node;
+    }
+    while (BST != NULL)
     {
         if(X < BST->Data)
         {
@@ -172,106 +182,84 @@ BinTree Insert( BinTree BST, ElementType X )
     return root;
 }
 
-Position FindFather( BinTree BST, ElementType X)
+void CopyNode( Position target_node, Position source_node)
 {   
-    Position del_node, root=BST, father_node=NULL, child_node;
-    do
-    {
-        if(X < BST->Data)
-        {
-            if(BST->Left == NULL)
-            {   
-                return NULL;
-            }
-            else
-            {   
-                father_node = BST;
-                BST = BST->Left;
-            }
-        }
-        else
-        {
-            if(X > BST->Data)
-            {
-                if(BST->Right == NULL)
-                {
-                    return NULL;
-                }
-                else
-                {   
-                    father_node = BST;
-                    BST = BST->Right;
-                }
-            }
-            else
-            {
-                del_node = BST;
-                return father_node;
-            }
-        }
-    }
-    while (1);
+    //printf("copy node: %d from node: %d\n", target_node->Data, source_node->Data);
+    target_node->Data = source_node->Data;
+    target_node->Left = source_node->Left;
+    target_node->Right = source_node->Right;
 }
 
 BinTree Delete( BinTree BST, ElementType X )
 {   // 函数Delete将X从二叉搜索树BST中删除，并返回结果树的根结点指针；
     // 如果X不在树中，则打印一行Not Found并返回原树的根结点指针；
-    Position del_node, root=BST, father_node=NULL, child_node, child_father_node;
-    del_node = Find(root, X);
-    if (del_node == NULL)
+    Position tmp_node;
+        
+    if (BST == NULL)
     {
         printf("Not Found\n");
         return BST;
     }
-    father_node = FindFather(root, X);
-    if (del_node->Left == NULL || del_node->Right == NULL)
-    {                                               // 被删除节点至多有一个子节点
-        if(father_node == NULL)                     // 被删除节点为根节点
-        {                                           // 更新根节点
-            if (del_node->Left == NULL)             
-                root = del_node->Right;
-            else
-                root = del_node->Left;
-        } 
-        else                                        // 用子节点替代被删除的节点
-        {   
-            if (del_node->Left == NULL)
-                child_node = del_node->Right;
-            else
-                child_node = del_node->Left;
-            if (father_node->Left == del_node)
-                father_node->Left = child_node;
-            else
-                father_node->Right = child_node;
-        }
-    }
-    else                                            // 被删除节点有2个子节点
+    //printf("now node: %d delete node: %d\n", BST->Data, X);
+    if (X < BST->Data)
     {
-        child_node = FindMax(del_node->Right);      // 寻找右分支最大子节点
-        child_father_node = FindFather(del_node, child_node->Data);
-        if (child_father_node == NULL)
-            child_father_node = del_node;
-        if (father_node == NULL)                    // 被删除的节点是根节点
-            root = child_node;                      // 设置child_node为根节点
-        else
-        {                                           // 将child_node放到del_node的父节点下面
-            if (father_node->Left == del_node)
-                father_node->Left = child_node;
-            else
-                father_node->Right = child_node;
-        }
-        father_node->Right = child_node->Left;      // child_node 右节点为空
-        child_node->Right = del_node->Right;        // 将child_node放到del_node的子节点上面
-        child_node->Left = del_node->Left;
+        BST->Left = Delete(BST->Left, X);
     }
-    free(del_node);
-    return root;
+    else 
+    {
+        if (X > BST->Data)
+        {
+            BST->Right = Delete(BST->Right, X);
+        }
+        else
+        {   
+            //printf("now node: %d find node: %d\n", BST->Data, X);
+            if (BST->Left != NULL && BST->Right != NULL)
+            {                                               // 被删除节点有2个子节点
+                tmp_node = FindMax(BST->Left);
+                BST->Data = tmp_node->Data;
+                BST->Left = Delete(BST->Left, BST->Data);
+            }
+            else 
+            {   
+                if (BST->Left != NULL || BST->Right != NULL)
+                {                                                // 被删除节点有1个子节点
+                    if(BST->Left == NULL)
+                    {   
+                        tmp_node = BST->Right;
+                        CopyNode(BST, BST->Right);
+                    }
+                    else
+                    {
+                        tmp_node = BST->Left;
+                        CopyNode(BST, BST->Left);
+                    }
+                    //printf("free single node: %d\n", BST->Data);
+                    free(tmp_node);
+                }
+                else
+                {   
+                    //printf("free blank node: %d\n", BST->Data);
+                    free(BST);
+                    BST = NULL;
+                }
+            }
+        }
+    }
+    // if (BST == NULL)
+    //     printf("return -1");
+    // else
+    //     printf("return %d->", BST->Data);
+    return BST;
 }
 
 Position Find( BinTree BST, ElementType X )
 {   
-    while (X != BST->Data)
-    {
+    while (BST != NULL)
+    {   
+        //printf("Node:%d X:%d\n", BST->Data, X);
+        if(X == BST->Data)
+            return BST;
         if(X < BST->Data)
         {
             if(BST->Left == NULL)
@@ -281,17 +269,10 @@ Position Find( BinTree BST, ElementType X )
         }
         else
         {
-            if(X > BST->Data)
-            {
-                if(BST->Right == NULL)
-                    return NULL;
-                else
-                    BST = BST->Right;
-            }
+            if(BST->Right == NULL)
+                return NULL;
             else
-            {
-                return BST;
-            }
+                BST = BST->Right;
         }
     }
     return BST;
@@ -299,16 +280,20 @@ Position Find( BinTree BST, ElementType X )
 
 Position FindMin( BinTree BST )
 {   // 查找最小元素
+    if(BST == NULL)
+        return BST;
     if(BST->Left != NULL)
-        FindMin( BST->Left );
+        return FindMin( BST->Left );
     else
         return BST;
 }
 
 Position FindMax( BinTree BST )
 {   // 查找最大元素
+    if(BST == NULL)
+        return BST;
     if(BST->Right != NULL)
-        FindMin( BST->Right );
+        return FindMax( BST->Right );
     else
         return BST;
 }
