@@ -74,7 +74,7 @@ typedef struct Set *pset;
 
 pset read_input();
 pset create(int);
-int get_set(pset, int);
+int find(pset, int);
 int check_connect(pset, int, int);
 void insert(pset, int, int);
 void count_set(pset);
@@ -119,22 +119,21 @@ void count_set(pset ps)
         printf("There are %d components.\n", count);
 }
 
-int get_set(pset ps, int pos)
-{   // 确定最终父类类别
+int find(pset ps, int pos)
+{   // 确定最终父类类别 并实现自动压缩路径
     if (pos <= 0 || pos > ps->size)
         return 0;
-    while (ps->data[pos] > 0)
-    {
-        pos = ps->data[pos];
-    }
-    return pos;
+    if (ps->data[pos] <= 0)
+        return pos;
+    else
+        return ps->data[pos] = find(ps, pos);
 }
 
 int check_connect(pset ps, int pos1, int pos2)
 {   // 判断两点是否连接
     int set1, set2;
-    set1 = get_set(ps, pos1);
-    set2 = get_set(ps, pos2);
+    set1 = find(ps, pos1);
+    set2 = find(ps, pos2);
     if (set1 > 0 && set1 == set2)
         return 1;
     else
@@ -144,8 +143,8 @@ int check_connect(pset ps, int pos1, int pos2)
 void insert(pset ps,int pos1, int pos2)
 {   // 插入连接
     int set1, set2;
-    set1 = get_set(ps, pos1);
-    set2 = get_set(ps, pos2);
+    set1 = find(ps, pos1);
+    set2 = find(ps, pos2);
     if (set1 == set2)                           // 最终节点指向相同
     {   
         if (set1==0)                            // 都指向0 即未初始化  创造集合
