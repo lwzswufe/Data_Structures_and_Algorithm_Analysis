@@ -34,7 +34,8 @@ struct Heap
 typedef struct Heap *pheap;
 
 pheap read_input(int);
-pheap insert(pheap);
+pheap read_input2(int);
+void insert(pheap, int);
 void adjust_all(pheap);
 void adjust(pheap, int);
 void print(pheap, int);
@@ -43,10 +44,10 @@ int main()
     pheap ph;
     int N, M;
     scanf("%d %d", &N, &M);
-    ph = read_input(N);
-    adjust_all(ph);
+    ph = read_input2(N);
+    // adjust_all(ph);
     print(ph, M);
-    scanf("%d %d", &N, &M);
+    //scanf("%d %d", &N, &M);
     return 0;
 }
 
@@ -79,8 +80,41 @@ void adjust(pheap ph, int pos)
     }
 }
 
+void insert(pheap ph, int X)
+{   // 插入元素到最小堆
+    int pos, tmp;
+    ph->size++;
+    pos = ph->size;
+    ph->data[pos] = X;
+    while(ph->data[pos]< ph->data[pos/2])
+    {
+        tmp = ph->data[pos/2];
+        ph->data[pos/2] = ph->data[pos];
+        ph->data[pos] = tmp;
+        pos/=2;
+    }
+}
+
+pheap read_input2(int N)
+{   // 读入数据 初始化 最小堆 边插入边排序
+    int *arr, X;
+    pheap ph;
+    arr = (int *)malloc((N + 1) * sizeof(int));
+    arr[0] = MIN_INT;
+    ph = (pheap)malloc(sizeof(struct Heap));
+    ph->size = 0;
+    ph->capacity = N;
+    ph->data = arr;
+    for(int i=1; i<=N; i++)
+    {
+        scanf("%d", &X);
+        insert(ph, X);
+    }
+    return ph;
+}
+
 pheap read_input(int N)
-{   // 读入数据 初始化 最小堆
+{   // 读入数据 初始化 最小堆 先储存再排序
     int *arr;
     pheap ph;
     arr = (int *)malloc((N + 1) * sizeof(int));
@@ -110,7 +144,3 @@ void print(pheap ph, int M)
         printf("%d\n", ph->data[1]);
     }
 }
-
-
-
-
