@@ -72,14 +72,19 @@ Sample Output 2:
 #define WIDTH 50
 #define RAIDUS 7.5000
 #define MAX_DISTANCE 1000000.0
+#define MAX_NODE 100
+#define false 0
+#define true 1
 
 struct Graph
 {
     int node_num;
+    int Nv;
     int *x;
     int *y;
     int *path;
     double *dist;
+    double (*G)[MAX_NODE];
     double jump_len;
 };
 
@@ -87,7 +92,8 @@ typedef struct Graph *pgraph;
 
 pgraph create_graph(int N, int J);
 double jump(pgraph pg, int pos1, int pos2);
-int BFS(pgraph pg);
+int FindMinDist( pgraph graph, int collected[] );
+int Dijkstra( pgraph graph, int S );
 void print_path(pgraph pg, int pos, int step);
 
 int main(int argc, char const *argv[])
@@ -96,7 +102,7 @@ int main(int argc, char const *argv[])
     pgraph pg;
     scanf("%d %d", &N, &J);
     pg = create_graph(N, J);
-    is_reach = BFS(pg);
+    is_reach = Dijkstra(pg, 0);
     // for(int i=0; i<=pg->node_num+1; i++)
     //     printf("%d:%0.2lf, ", i, pg->dist[i]);
     // printf("\n");
@@ -114,11 +120,12 @@ int main(int argc, char const *argv[])
 pgraph create_graph(int N, int J)
 {
     int *x, *y, *path;
-    double *dist;
+    double *dist, (*G)[MAX_NODE];
     x = (int *)malloc((N+2)*sizeof(int));
     y = (int *)malloc((N+2)*sizeof(int));
     path = (int *)malloc((N+2)*sizeof(int));
     dist = (double*)malloc((N+2)*sizeof(double));
+    G = (double(*)[MAX_NODE])malloc((N+2)*MAX_NODE*sizeof(double));
     x[0] = 0;
     y[0] = 0;
     x[N+1] = 50;
@@ -136,52 +143,94 @@ pgraph create_graph(int N, int J)
     pgraph pg;
     pg = (pgraph)malloc(sizeof(struct Graph));
     pg->node_num = N;
+    pg->Nv = N + 2;
     pg->jump_len = J * 1.0;
     pg->x = x;
     pg->y = y;
     pg->path = path;
     pg->dist = dist;
+    pg->G = G;
     return pg;
 }
 
 
-int BFS(pgraph pg) 
-{   // 广度优先探索
-    int is_reach = 0;
-    double distance;
-    for(int i=0; i<=pg->node_num+1; i++)
-    {   
-        distance = jump(pg, 0, i);
-        if (distance > pg->jump_len)
-            distance = MAX_DISTANCE;
-        else
-            pg->path[i] = 0;
-        //printf("0->%d = %.2lf\n", i, distance);
-        pg->dist[i] = distance;
-    }
-    for(int k=1; k<pg->node_num+1; k++)
-    //for(int k=1; k==1; k++)
+int FindMinDist( pgraph graph, int collected[] )
+{ /* 返回未被收录顶点中dist最小者 */
+    int MinV, V;
+    double MinDist = MAX_NODE;
+ 
+    for (V=0; V<graph->Nv; V++) 
     {
-        for(int i=1; i<=pg->node_num+1; i++)
-        {   
-            for(int j=1; j<=pg->node_num+1; j++)
-            {   
-                distance = jump(pg, i, j);
-                if (distance > pg->jump_len)
-                    continue;
-                if (pg->dist[j] > pg->dist[i] + distance)
-                {   
-                    //printf("0->%d->%d\n", i, j);
-                    pg->path[j] = i;
-                    pg->dist[j] = pg->dist[i] + distance;
-                }
-                if (j == pg->node_num + 1)
-                    is_reach = 1;
-            }   
+        if ( collected[V]==false && graph->dist[V]<MinDist) 
+        {
+            /* 若V未被收录，且dist[V]更小 */
+            MinDist = graph->dist[V]; /* 更新最小距离 */
+            MinV = V; /* 更新对应顶点 */
         }
     }
-    return is_reach;
+    if (MinDist < MAX_NODE) /* 若找到最小dist */
+        return MinV; /* 返回对应的顶点下标 */
+    else return -1;  /* 若这样的顶点不存在，返回错误标记 */
 }
+ 
+int Dijkstra( pgraph graph, int S )
+{
+    int collected[MAX_NODE];
+    int V, W;
+    
+    for ( int i=0; i<graph->Nv; i++)
+    {
+        for (int j=0; j<graph->Nv; j++)
+        {
+            graph->G[i][j] = jump(graph, i, j);
+        }
+    }
+    /* 初始化：此处默认邻接矩阵中不存在的边用MAX_NODE表示 */
+    for ( V=0; V<graph->Nv; V++ ) 
+    {
+        graph->dist[V] = graph->G[S][V];
+        if ( graph->dist[V]<MAX_DISTANCE )
+            graph->path[V] = S;
+        else
+            graph->path[V] = -1;
+        collected[V] = false;
+    }
+    /* 先将起点收入集合 */
+    graph->dist[S] = 0;
+    collected[S] = true;
+ 
+    while (true) 
+    {
+        /* V = 未被收录顶点中dist最小者 */
+        V = FindMinDist( graph, collected );
+        if ( V==-1 ) /* 若这样的V不存在 */
+            break;      /* 算法结束 */
+        collected[V] = true;  /* 收录V */
+        printf("collect %d\n", V);
+        for( W=0; W<graph->Nv; W++ ) /* 对图中的每个顶点W */
+        {
+            /* 若W是V的邻接点并且未被收录 */
+            if ( collected[W]==false && graph->G[V][W]<MAX_DISTANCE-1) 
+            {
+                if ( graph->G[V][W]<0 ) /* 若有负边 */
+                    return false; /* 不能正确解决，返回错误标记 */
+                /* 若收录V使得dist[W]变小 */
+                if ( graph->dist[V]+graph->G[V][W] < graph->dist[W] ) 
+                {   
+                    printf("%.0lf + %.0lf < %.0lf\n", graph->dist[V], graph->G[V][W], graph->dist[W]);
+                    printf("0->(%d, %d)->(%d, %d)\n", graph->x[V], graph->y[V], graph->x[W], graph->y[W]);
+                    graph->dist[W] = graph->dist[V]+graph->G[V][W]; /* 更新dist[W] */
+                    graph->path[W] = V; /* 更新S到W的路径 */
+                }
+            }
+        }
+    } /* while结束*/
+    if (graph->dist[graph->Nv-1] < MAX_DISTANCE)
+        return true; 
+    else
+        return false;
+}
+
 
 void print_path(pgraph pg, int pos, int step)
 {   
@@ -232,9 +281,11 @@ double jump(pgraph pg, int pos1, int pos2)
     if (pos1 == 0)                                  // 若出发点为起点
         distance -= RAIDUS;
     //printf("jump %d->%d %.2lf\n", pos1, pos2, distance);
+    if (distance > pg->jump_len)
+        return MAX_DISTANCE;
     if (distance < 0)
         return 0;
     else
-        return distance;
+        return 1;
 }
 
