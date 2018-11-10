@@ -121,7 +121,7 @@ int FindMinDist( pgraph graph, int collected[] )
             MinV = V;                           // 更新对应顶点 
         }
     }
-    if (MinDist < graph->N)                     // 若找到最小dist 
+    if (MinDist < MAX_DISTANCE)                 // 若找到最小dist 
         return MinV;                            // 返回对应的顶点下标
     else return -1;                             // 若这样的顶点不存在，返回错误标记 
 }
