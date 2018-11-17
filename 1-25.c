@@ -46,6 +46,8 @@ Sample Input 2:
 Sample Output 2:
 Merge Sort
 1 2 3 8 4 5 7 9 0 6
+注意点 非递归的归并排序的中点并不是 (L + R)/2
+插入排序注意 可能有相等数字
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,7 +69,7 @@ int main()
     idx = is_insert_sort(N, arr0, arr1);
     if (idx < 0)
     {   
-        MergeSort( arr1, N );
+        MergeSort(arr1, N);
         printf("Merge Sort\n");
     }
     else
@@ -91,8 +93,8 @@ void read_input(int N, int *arr)
 int is_insert_sort(int N, int *arr0, int *arr1)
 {   // 判断是否是插入排序  若是返回已排序列的位置 若不是返回-1
     // 前半部分是已派好序列。后半部分是原序列
-    int i, idx;
-    for(i=1; i<N && arr1[i-1] < arr1[i]; i++)
+    int i, idx=1;
+    for(i=1; i<N && arr1[i-1] <= arr1[i]; i++)
         ;
     idx = i;
     for(; i<N && idx >=0; i++)
@@ -100,32 +102,23 @@ int is_insert_sort(int N, int *arr0, int *arr1)
         if (arr0[i] != arr1[i])
             idx = -1;
     }
+    //printf("idx=%d\n", idx);
     return idx;
-}
-
-int mod(int x)
-{
-    int i = 1;
-    while (x % (2 * i) == 0)
-    {
-        i *= 2;
-    }
-    return i;
 }
 
 int find_width(int N, int *arr1)
 {   // 寻找归并排序已经行窗口大小
-    int width = N;
-    for(int i=0; i<N-1; i++)
-    {   
-        if (arr1[i] > arr1[i+1] && mod(i+1) < width)
-        {
-            width = mod(i+1);
+    int i, width=2;
+    for(; width < N; width *= 2)
+    {
+        for(i=width; i<N; i+=width*2)
+        {   
+            if (arr1[i-1] > arr1[i])
+                return width;
         }
     }
     return width;
 }
-
 
 
 void Swap( ElementType *a, ElementType *b )
@@ -147,6 +140,8 @@ void Insertion_Sort( ElementType A[], int N , int P)
 
 void print_arr(int N, int *arr)
 {   
+    if (N <= 0)
+        return;
     for(int i=0; i<N-1; i++)
     {
         printf("%d ", arr[i]);
@@ -180,19 +175,6 @@ void Merge( ElementType A[], ElementType TmpA[], int L, int R, int RightEnd )
         A[RightEnd] = TmpA[RightEnd];   // 将有序的TmpA[]复制回A[]
 }
  
-void Msort( ElementType A[], ElementType TmpA[], int L, int RightEnd )
-{ // 核心递归排序函数 
-    int Center;
-      
-    if ( L < RightEnd ) 
-    {
-        Center = (L+RightEnd) / 2;
-        //Msort( A, TmpA, L, Center );              // 递归解决左边 
-        //Msort( A, TmpA, Center+1, RightEnd );     // 递归解决右边  
-        Merge( A, TmpA, L, Center+1, RightEnd );  // 合并两段有序序列 
-    }
-}
- 
 void MergeSort( ElementType A[], int N )
 { /* 归并排序 */
     ElementType *TmpA;
@@ -208,7 +190,7 @@ void MergeSort( ElementType A[], int N )
             ed = i + width - 1;
             if (ed > N - 1)
                 ed = N - 1;
-            Msort( A, TmpA, st, ed);
+            Merge( A, TmpA, st, st+width/2, ed ); 
         }
         free( TmpA );
     }
